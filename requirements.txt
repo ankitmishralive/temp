@@ -1,0 +1,9 @@
+Flask
+Flask-GraphQL
+Flask-Cors
+python-dotenv
+requests
+keycloak
+stripe
+graphql-core
+tinydb

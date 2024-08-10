@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanDaily</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+
+    {% include "header.html" %}
+
+
+
+    <div class="container mx-auto px-4 py-6">
+        <h1 class="text-4xl font-extrabold mb-6 text-center text-blue-700">Plan your Day 2 Day Management</h1>
+
+        <!-- Add To-Do Form -->
+        <form action="{{ url_for('todo') }}" method="post" enctype="multipart/form-data" class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <input type="hidden" name="action" value="add">
+            <div class="space-y-4">
+                <div>
+                    <label for="title" class="file-upload-label">Title:</label>
+                    <input type="text" id="title" name="title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="description" class="file-upload-label">Description:</label>
+                    <textarea id="description" name="description" required class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="time" class="file-upload-label">Time:</label>
+                    <input type="datetime-local" id="time" name="time" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                </div>
+
+                {% if pro_user %}
+                    <label for="images" class="file-upload-label">Upload Images:</label>
+                    <input type="file" id="images" name="images" multiple class="file-upload-input">
+                {% else %}
+                    <div class="premium-plan-alert">
+                        <p class="premium-message">
+                            To upload images, you need to buy the <strong>Pro Plan</strong>.
+                        </p>
+                        <a href="{{ url_for('pro_license') }}" class="premium-link">Buy Now</a>
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Add To-Do</button>
+            </div>
+        </form>
+
+        <!-- To-Do List -->
+        <ul class="space-y-4">
+            {% for todo in todos %}
+            <li class="todo-card">
+                <h2 class="text-2xl font-semibold text-blue-800">{{ todo.title }}</h2>
+                <p class="text-gray-700">{{ todo.description }}</p>
+                <p class="text-gray-500">Time: {{ todo.time }}</p>
+
+                {% if todo.images %}
+                <div class="mt-4">
+                    <p class="font-semibold text-lg">Images:</p>
+                    <div class="grid grid-cols-2 gap-4 mt-2">
+                        {% for image in todo.images %}
+                        <img src="{{ image }}" alt="To-Do Image" class="object-cover w-full h-32 rounded-lg">
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mt-4 flex justify-between items-center">
+                    <div>
+                        <button onclick="toggleEditForm('{{ todo.doc_id }}')" class="text-blue-600 hover:underline">Edit</button>
+                        <form action="{{ url_for('todo') }}" method="post" class="inline">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="todo_id" value="{{ todo.doc_id }}">
+                            <button type="submit" class="text-red-600 hover:underline">Delete</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Edit Form -->
+                <div id="edit-form-{{ todo.doc_id }}" class="edit-form hidden mt-6">
+                    <form action="{{ url_for('todo') }}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="update">
+                        <input type="hidden" name="todo_id" value="{{ todo.doc_id }}">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="title-{{ todo.doc_id }}" class="file-upload-label">Title:</label>
+                                <input type="text" id="title-{{ todo.doc_id }}" name="title" value="{{ todo.title }}" required class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="description-{{ todo.doc_id }}" class="file-upload-label">Description:</label>
+                                <textarea id="description-{{ todo.doc_id }}" name="description" required class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{{ todo.description }}</textarea>
+                            </div>
+                        
+                            <div class="mb-4">
+                                <label for="time" class="file-upload-label">Time:</label>
+                                <input type="datetime-local" id="time" name="time" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                            </div>
+
+                            {% if pro_user %}
+                            <div>
+                                <label for="images-{{ todo.doc_id }}" class="file-upload-label">Images:</label>
+                                <input type="file" id="images-{{ todo.doc_id }}" name="images" multiple class="file-upload-input">
+                                <p class="text-gray-500 mt-2">Current Images:</p>
+                                <div class="grid grid-cols-2 gap-4 mt-2">
+                                    {% for image in todo.images %}
+                                    <img src="{{ image }}" alt="To-Do Image" class="object-cover w-full h-32 rounded-lg">
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">Update To-Do</button>
+                        </div>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        function toggleEditForm(id) {
+            const form = document.getElementById(`edit-form-${id}`);
+            form.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
